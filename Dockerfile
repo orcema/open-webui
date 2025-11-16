@@ -27,7 +27,7 @@ FROM --platform=$BUILDPLATFORM node:22-alpine3.20 AS build
 ARG BUILD_HASH
 
 # Set Node.js options (heap limit Allocation failed - JavaScript heap out of memory)
-# ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV NODE_OPTIONS="--max-old-space-size=8192"
 
 WORKDIR /app
 
@@ -192,3 +192,69 @@ ENV WEBUI_BUILD_VERSION=${BUILD_HASH}
 ENV DOCKER=true
 
 CMD [ "bash", "start.sh"]
+
+######## Development stage - extends base with Node.js for Vite dev server ########
+FROM base AS dev
+
+# Re-declare args for dev stage
+ARG USE_CUDA
+ARG USE_OLLAMA
+ARG USE_CUDA_VER
+ARG USE_SLIM
+ARG USE_PERMISSION_HARDENING
+ARG USE_EMBEDDING_MODEL
+ARG USE_RERANKING_MODEL
+ARG UID
+ARG GID
+ARG BUILD_HASH
+
+# Switch back to root for installing Node.js (base stage switched to non-root user)
+USER root
+
+# Override ENV for development
+ENV ENV=dev \
+    PORT=8080 \
+    USE_OLLAMA_DOCKER=${USE_OLLAMA} \
+    USE_CUDA_DOCKER=${USE_CUDA} \
+    USE_SLIM_DOCKER=${USE_SLIM} \
+    USE_CUDA_DOCKER_VER=${USE_CUDA_VER} \
+    USE_EMBEDDING_MODEL_DOCKER=${USE_EMBEDDING_MODEL} \
+    USE_RERANKING_MODEL_DOCKER=${USE_RERANKING_MODEL}
+
+# Install Node.js for Vite dev server (matching production build stage version)
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
+# Verify Node.js installation
+RUN node --version && npm --version && \
+    which node && which npm
+
+# Set up frontend directory (source will be mounted at runtime)
+WORKDIR /app
+
+# Install frontend dependencies (will be used by mounted source)
+COPY package.json package-lock.json ./
+RUN npm ci --force
+
+# Install development tools
+RUN pip3 install --no-cache-dir debugpy
+
+# Copy development startup script
+COPY --chown=$UID:$GID ./backend/dev-docker.sh ./backend/dev-docker.sh
+RUN chmod +x ./backend/dev-docker.sh
+
+# Expose ports: 8080 (backend), 5173 (Vite dev server), 5678 (debugpy)
+EXPOSE 8080 5173 5678
+
+# Set environment for development
+ENV WEBUI_BUILD_VERSION=${BUILD_HASH}
+ENV DOCKER=true
+ENV PYTHONUNBUFFERED=1
+
+# Switch back to the user (matching base stage)
+USER $UID:$GID
+
+# Default command (will be overridden in docker-compose.dev.yml)
+CMD ["/app/backend/dev-docker.sh"]
