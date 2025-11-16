@@ -64,7 +64,7 @@ export DOCKER=true
 if [ "$SKIP_PYODIDE" = "true" ]; then
     # Run vite dev directly, skipping pyodide:fetch
     echo "   (Skipping Pyodide fetch - using cached packages)"
-    vite dev --host --port 5173 &
+    npx vite dev --host --port 5173 &
 else
     # Run normal dev script (includes pyodide:fetch)
     npm run dev -- --host --port 5173 &
