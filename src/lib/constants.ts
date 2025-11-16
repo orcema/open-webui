@@ -3,8 +3,11 @@ import { browser, dev } from '$app/environment';
 
 export const APP_NAME = 'Open WebUI';
 
-export const WEBUI_HOSTNAME = browser ? (dev ? `${location.hostname}:8080` : ``) : '';
-export const WEBUI_BASE_URL = browser ? (dev ? `http://${WEBUI_HOSTNAME}` : ``) : ``;
+// In Docker dev mode, use relative URLs so Vite proxy can forward to backend
+// In local dev mode, use localhost:8080
+// In production, use empty string (same origin)
+export const WEBUI_HOSTNAME = browser ? (dev ? (import.meta.env.DOCKER === 'true' ? '' : `${location.hostname}:8080`) : ``) : '';
+export const WEBUI_BASE_URL = browser ? (dev ? (import.meta.env.DOCKER === 'true' ? '' : `http://${WEBUI_HOSTNAME}`) : ``) : ``;
 export const WEBUI_API_BASE_URL = `${WEBUI_BASE_URL}/api/v1`;
 
 export const OLLAMA_API_BASE_URL = `${WEBUI_BASE_URL}/ollama`;
