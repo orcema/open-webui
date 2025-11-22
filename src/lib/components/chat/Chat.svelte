@@ -2013,9 +2013,72 @@
 		});
 
 		if (res) {
-			if (res.error) {
+			// Check if response is a streaming Response object
+			if (res instanceof Response) {
+				// Handle streaming response
+				if (res.ok && res.body) {
+					// Initialize response message for streaming
+					if (!responseMessage.content) {
+						responseMessage.content = '';
+					}
+					responseMessage.done = false;
+					history.messages[responseMessageId] = responseMessage;
+					generating = true;
+					generationController = new AbortController();
+					
+					try {
+						const textStream = await createOpenAITextStream(res.body, $settings.splitLargeChunks ?? false);
+						for await (const update of textStream) {
+							const { value, done, sources, error, usage } = update;
+							if (error) {
+								await handleOpenAIError(error, responseMessage);
+								generating = false;
+								generationController = null;
+								break;
+							}
+							
+							if (done) {
+								responseMessage.done = true;
+								history.messages[responseMessageId] = responseMessage;
+								generating = false;
+								generationController = null;
+								break;
+							}
+
+							if (responseMessage.content == '' && value == '\n') {
+								continue;
+							} else {
+								responseMessage.content += value;
+								history.messages[responseMessageId] = responseMessage;
+							}
+
+							if (autoScroll) {
+								scrollToBottom();
+							}
+						}
+
+						// Ensure done is set even if loop exits without done=true
+						if (!responseMessage.done) {
+							responseMessage.done = true;
+							history.messages[responseMessageId] = responseMessage;
+						}
+					} catch (streamError) {
+						console.error('Stream processing error:', streamError);
+						await handleOpenAIError(streamError, responseMessage);
+					} finally {
+						generating = false;
+						generationController = null;
+					}
+				} else if (!res.ok) {
+					// Handle streaming error response
+					const errorData = await res.json().catch(() => ({ error: { message: 'Request failed' } }));
+					await handleOpenAIError(errorData.error || errorData, responseMessage);
+				}
+			} else if (res.error) {
+				// Handle non-streaming error response
 				await handleOpenAIError(res.error, responseMessage);
 			} else {
+				// Handle non-streaming success response (task-based)
 				if (taskIds) {
 					taskIds.push(res.task_id);
 				} else {

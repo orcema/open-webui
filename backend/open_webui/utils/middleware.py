@@ -2027,7 +2027,7 @@ async def process_chat_response(
 
     # Non standard response
     if not any(
-        content_type in response.headers["Content-Type"]
+        content_type in response.headers.get("Content-Type", "")
         for content_type in ["text/event-stream", "application/x-ndjson"]
     ):
         return response
@@ -2538,6 +2538,8 @@ async def process_chat_response(
 
                         # "data:" is the prefix for each event
                         if not data.startswith("data:"):
+                            if stream_body_handler._line_count <= 3:
+                                log.debug(f"Middleware: Skipping line without 'data:' prefix: {data[:100]}")
                             continue
 
                         # Remove the prefix

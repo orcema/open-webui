@@ -376,11 +376,23 @@ export const generateOpenAIChatCompletion = async (
 		body: JSON.stringify(body)
 	})
 		.then(async (res) => {
-			if (!res.ok) throw await res.json();
+			if (!res.ok) {
+				const errorData = await res.json().catch(() => ({ error: { message: 'Request failed' } }));
+				throw errorData;
+			}
+			
+			// Check if response is streaming (SSE format)
+			const contentType = res.headers.get('Content-Type') || '';
+			if (contentType.includes('text/event-stream') || contentType.includes('application/x-ndjson')) {
+				// Return raw Response object for streaming
+				return res;
+			}
+			
+			// Parse JSON for non-streaming responses
 			return res.json();
 		})
 		.catch((err) => {
-			error = err?.detail ?? err;
+			error = err?.detail ?? err?.error ?? err;
 			return null;
 		});
 
