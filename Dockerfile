@@ -167,6 +167,9 @@ COPY --chown=$UID:$GID --from=build /app/build /app/build
 COPY --chown=$UID:$GID --from=build /app/CHANGELOG.md /app/CHANGELOG.md
 COPY --chown=$UID:$GID --from=build /app/package.json /app/package.json
 
+# copy scripts directory (needed for pyodide fetch and other build-time scripts)
+COPY --chown=$UID:$GID --from=build /app/scripts /app/scripts
+
 # copy backend files
 COPY --chown=$UID:$GID ./backend .
 
