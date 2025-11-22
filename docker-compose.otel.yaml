@@ -23,10 +23,14 @@ services:
       - ${OPEN_WEBUI_PORT-8088}:8080
     environment:
       - ENABLE_OTEL=true
+      - ENABLE_OTEL_TRACES=true  # Required for distributed tracing
       - ENABLE_OTEL_METRICS=true
       - OTEL_EXPORTER_OTLP_INSECURE=true # Use insecure connection for OTLP, remove in production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://grafana:4317
       - OTEL_SERVICE_NAME=open-webui
+      - WEBUI_SECRET_KEY="your-secret-key-here"
+      # OTEL_BASIC_AUTH_USERNAME and OTEL_BASIC_AUTH_PASSWORD are optional
+      # Only set if your collector requires authentication
     extra_hosts:
       - host.docker.internal:host-gateway
     restart: unless-stopped
