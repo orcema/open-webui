@@ -2062,6 +2062,11 @@
 							responseMessage.done = true;
 							history.messages[responseMessageId] = responseMessage;
 						}
+						
+						// Save chat state immediately after streaming completes
+						// This ensures the chat is persisted even if socket events are missed
+						// (e.g., when using remote Ollama connections where socket events may not fire reliably)
+						await saveChatHandler(_chatId, history);
 					} catch (streamError) {
 						console.error('Stream processing error:', streamError);
 						await handleOpenAIError(streamError, responseMessage);
