@@ -62,9 +62,9 @@ export DOCKER=true
 
 # Conditionally skip Pyodide fetch if already cached
 if [ "$SKIP_PYODIDE" = "true" ]; then
-    # Run vite dev directly, skipping pyodide:fetch
+    # Run vite dev directly via npx, skipping pyodide:fetch
     echo "   (Skipping Pyodide fetch - using cached packages)"
-    vite dev --host --port 5173 &
+    npx vite dev --host --port 5173 &
 else
     # Run normal dev script (includes pyodide:fetch)
     npm run dev -- --host --port 5173 &
@@ -85,12 +85,15 @@ for i in {1..30}; do
 done
 
 # Start backend with debugpy
-echo "🐍 Starting backend with debugpy on port 5678..."
+# TEMPORARY TEST: Running without debugpy to test if it affects streaming responses
+# Uncomment the debugpy line and comment the direct uvicorn line to restore debugpy
+echo "🐍 Starting backend (TEST MODE: without debugpy)..."
 cd /app/backend
-python -m debugpy --listen 0.0.0.0:5678 -m uvicorn open_webui.main:app \
+# python -m debugpy --listen 0.0.0.0:5678 -m uvicorn open_webui.main:app \
+python -m uvicorn open_webui.main:app \
     --host 0.0.0.0 \
-    --port $PORT \
-    --reload &
+    --port $PORT &
+# --reload (commented out for testing)
 BACKEND_PID=$!
 
 echo "✅ Both services started!"

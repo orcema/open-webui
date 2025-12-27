@@ -60,6 +60,12 @@ export default defineConfig({
 				target: 'http://localhost:8080',
 				changeOrigin: true,
 				secure: false
+			},
+			'/ws': {
+				target: 'http://localhost:8080',
+				changeOrigin: true,
+				secure: false,
+				ws: true // Enable WebSocket proxying
 			}
 		} : undefined
 	}
