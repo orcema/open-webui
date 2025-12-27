@@ -192,26 +192,32 @@
 						class="mb-1 w-full flex flex-col justify-end overflow-x-auto gap-1 flex-wrap"
 						dir={$settings?.chatDirection ?? 'auto'}
 					>
-						{#each message.files as file}
-							{@const fileUrl =
-								file.url.startsWith('data') || file.url.startsWith('http')
-									? file.url
-									: `${WEBUI_API_BASE_URL}/files/${file.url}${file?.content_type ? '/content' : ''}`}
-							<div class={($settings?.chatBubble ?? true) ? 'self-end' : ''}>
-								{#if file.type === 'image' || (file?.content_type ?? '').startsWith('image/')}
+					{#each message.files as file}
+						{@const fileUrl =
+							file.url && (file.url.startsWith('data') || file.url.startsWith('http'))
+								? file.url
+								: file.url 
+									? `${WEBUI_API_BASE_URL}/files/${file.url}${file?.content_type ? '/content' : ''}`
+									: file.id 
+										? `${WEBUI_API_BASE_URL}/files/${file.id}${file?.content_type ? '/content' : ''}`
+										: null}
+						<div class={($settings?.chatBubble ?? true) ? 'self-end' : ''}>
+							{#if file.type === 'image' || (file?.content_type ?? '').startsWith('image/')}
+								{#if fileUrl}
 									<Image src={fileUrl} imageClassName=" max-h-96 rounded-lg" />
-								{:else}
-									<FileItem
-										item={file}
-										url={file.url}
-										name={file.name}
-										type={file.type}
-										size={file?.size}
-										small={true}
-									/>
 								{/if}
-							</div>
-						{/each}
+							{:else}
+								<FileItem
+									item={file}
+									url={fileUrl}
+									name={file.name}
+									type={file.type}
+									size={file?.size}
+									small={true}
+								/>
+							{/if}
+						</div>
+					{/each}
 					</div>
 				{/if}
 			{/if}
@@ -224,11 +230,13 @@
 								{#if file.type === 'image'}
 									<div class=" relative group">
 										<div class="relative flex items-center">
-											<Image
-												src={file.url}
-												alt="input"
-												imageClassName=" size-14 rounded-xl object-cover"
-											/>
+											{#if file.url}
+												<Image
+													src={file.url}
+													alt="input"
+													imageClassName=" size-14 rounded-xl object-cover"
+												/>
+											{/if}
 										</div>
 										<div class=" absolute -top-1 -right-1">
 											<button
