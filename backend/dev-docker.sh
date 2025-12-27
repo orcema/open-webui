@@ -85,15 +85,12 @@ for i in {1..30}; do
 done
 
 # Start backend with debugpy
-# TEMPORARY TEST: Running without debugpy to test if it affects streaming responses
-# Uncomment the debugpy line and comment the direct uvicorn line to restore debugpy
-echo "🐍 Starting backend (TEST MODE: without debugpy)..."
+echo "🐍 Starting backend with debugpy on port 5678..."
 cd /app/backend
-# python -m debugpy --listen 0.0.0.0:5678 -m uvicorn open_webui.main:app \
-python -m uvicorn open_webui.main:app \
+python -m debugpy --listen 0.0.0.0:5678 -m uvicorn open_webui.main:app \
     --host 0.0.0.0 \
-    --port $PORT &
-# --reload (commented out for testing)
+    --port $PORT \
+    --reload &
 BACKEND_PID=$!
 
 echo "✅ Both services started!"
