@@ -25,6 +25,7 @@ from open_webui.env import (
     REDIS_SENTINEL_HOSTS,
     REDIS_SENTINEL_PORT,
     FRONTEND_BUILD_DIR,
+    BASE_DIR,
     OFFLINE_MODE,
     OPEN_WEBUI_DIR,
     WEBUI_AUTH,
@@ -849,28 +850,49 @@ for file_path in (FRONTEND_BUILD_DIR / "static").glob("**/*"):
             logging.error(f"An error occurred: {e}")
 
 frontend_favicon = FRONTEND_BUILD_DIR / "static" / "favicon.png"
+source_favicon = BASE_DIR / "static" / "favicon.png"
 
+# Try to copy favicon from build directory first, then fallback to source static directory
 if frontend_favicon.exists():
     try:
         shutil.copyfile(frontend_favicon, STATIC_DIR / "favicon.png")
     except Exception as e:
         logging.error(f"An error occurred: {e}")
+elif source_favicon.exists():
+    try:
+        shutil.copyfile(source_favicon, STATIC_DIR / "favicon.png")
+    except Exception as e:
+        logging.error(f"An error occurred copying favicon from source: {e}")
 
 frontend_splash = FRONTEND_BUILD_DIR / "static" / "splash.png"
+source_splash = BASE_DIR / "static" / "splash.png"
 
+# Try to copy splash from build directory first, then fallback to source static directory
 if frontend_splash.exists():
     try:
         shutil.copyfile(frontend_splash, STATIC_DIR / "splash.png")
     except Exception as e:
         logging.error(f"An error occurred: {e}")
+elif source_splash.exists():
+    try:
+        shutil.copyfile(source_splash, STATIC_DIR / "splash.png")
+    except Exception as e:
+        logging.error(f"An error occurred copying splash from source: {e}")
 
 frontend_loader = FRONTEND_BUILD_DIR / "static" / "loader.js"
+source_loader = BASE_DIR / "static" / "loader.js"
 
+# Try to copy loader from build directory first, then fallback to source static directory
 if frontend_loader.exists():
     try:
         shutil.copyfile(frontend_loader, STATIC_DIR / "loader.js")
     except Exception as e:
         logging.error(f"An error occurred: {e}")
+elif source_loader.exists():
+    try:
+        shutil.copyfile(source_loader, STATIC_DIR / "loader.js")
+    except Exception as e:
+        logging.error(f"An error occurred copying loader from source: {e}")
 
 
 ####################################
